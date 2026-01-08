@@ -2,7 +2,12 @@
   "name": "clawd-theme",
   "version": "1.0.0",
   "description": "Customize Clawd mascot appearance with seasonal themes",
-  "author": "Taylor Watson <taylor.watson@soti.net>",
-  "commands": ["commands/clawd.md"],
-  "hooks": "hooks/hooks.json"
+  "author": {
+    "name": "Taylor Watson",
+    "email": "taylor.watson@soti.net"
+  },
+  "homepage": "https://github.com/taylorwatson/clawd-theme",
+  "repository": "https://github.com/taylorwatson/clawd-theme",
+  "license": "MIT",
+  "keywords": ["theme", "mascot", "customization", "seasonal", "clawd"]
 }
