@@ -199,6 +199,7 @@ function saveClawdConfig(config) {
 function setTheme(themeName) {
   const config = loadClawdConfig();
   config.theme = themeName;
+  config.autoSeasonal = false;
   saveClawdConfig(config);
 }
 function setAutoSeasonal(enabled) {
@@ -761,14 +762,108 @@ function renderAllThemes(themes2, currentTheme) {
   }).join("\n");
 }
 
+// dist/picker.js
+import * as readline from "readline";
+var THEMES = ["normal", "winter", "halloween", "valentines", "spring", "summer"];
+function clearScreen() {
+  process.stdout.write("\x1B[2J\x1B[H");
+}
+function hideCursor() {
+  process.stdout.write("\x1B[?25l");
+}
+function showCursor() {
+  process.stdout.write("\x1B[?25h");
+}
+function renderPicker(selectedIndex, autoSeasonal) {
+  clearScreen();
+  const themes2 = getAllThemes();
+  const selectedTheme = themes2[selectedIndex];
+  console.log("\x1B[1;36mClawd Theme Customizer\x1B[0m");
+  console.log("\u2500".repeat(40));
+  console.log();
+  console.log(renderClawd(selectedTheme));
+  console.log();
+  console.log(`  \x1B[1m${selectedTheme.displayName}\x1B[0m - ${selectedTheme.description}`);
+  console.log();
+  console.log("\u2500".repeat(40));
+  console.log();
+  themes2.forEach((theme, i) => {
+    const marker = i === selectedIndex ? "\x1B[36m\u276F\x1B[0m" : " ";
+    const name = i === selectedIndex ? `\x1B[1;36m${theme.displayName}\x1B[0m` : theme.displayName;
+    console.log(`  ${marker} ${i + 1}. ${name}`);
+  });
+  console.log();
+  const autoMarker = autoSeasonal ? "\x1B[32m\u2713\x1B[0m" : " ";
+  console.log(`  [${autoMarker}] Auto-seasonal mode`);
+  console.log();
+  console.log("\x1B[90m\u2191\u2193 Navigate  Enter Save  a Toggle auto  q Quit\x1B[0m");
+}
+async function runPicker() {
+  const config = loadClawdConfig();
+  let selectedIndex = THEMES.indexOf(config.theme);
+  if (selectedIndex === -1)
+    selectedIndex = 0;
+  let autoSeasonal = config.autoSeasonal;
+  if (!process.stdin.isTTY) {
+    console.log("Interactive mode requires a terminal.");
+    return;
+  }
+  hideCursor();
+  readline.emitKeypressEvents(process.stdin);
+  process.stdin.setRawMode(true);
+  renderPicker(selectedIndex, autoSeasonal);
+  return new Promise((resolve) => {
+    const cleanup = () => {
+      showCursor();
+      process.stdin.setRawMode(false);
+      process.stdin.removeListener("keypress", onKeypress);
+      console.log();
+    };
+    const onKeypress = (_str, key) => {
+      if (key.name === "up" || key.name === "k") {
+        selectedIndex = (selectedIndex - 1 + THEMES.length) % THEMES.length;
+        renderPicker(selectedIndex, autoSeasonal);
+      } else if (key.name === "down" || key.name === "j") {
+        selectedIndex = (selectedIndex + 1) % THEMES.length;
+        renderPicker(selectedIndex, autoSeasonal);
+      } else if (key.name === "a") {
+        autoSeasonal = !autoSeasonal;
+        renderPicker(selectedIndex, autoSeasonal);
+      } else if (key.name === "return") {
+        saveClawdConfig({
+          theme: THEMES[selectedIndex],
+          autoSeasonal
+        });
+        cleanup();
+        clearScreen();
+        const theme = getTheme(THEMES[selectedIndex]);
+        console.log(renderClawd(theme));
+        console.log(`
+  \x1B[32m\u2713\x1B[0m Theme saved: ${theme.displayName}`);
+        if (autoSeasonal) {
+          console.log("    Auto-seasonal mode enabled");
+        }
+        console.log();
+        resolve();
+      } else if (key.name === "q" || key.name === "escape" || key.ctrl && key.name === "c") {
+        cleanup();
+        clearScreen();
+        console.log("Cancelled");
+        resolve();
+      }
+    };
+    process.stdin.on("keypress", onKeypress);
+  });
+}
+
 // dist/cli.js
 var ESC = "\x1B";
 var moveTo = (row, col) => `${ESC}[${row};${col}H`;
 var saveCursor = `${ESC}[s`;
 var restoreCursor = `${ESC}[u`;
 var clearLine = `${ESC}[K`;
-var hideCursor = `${ESC}[?25l`;
-var showCursor = `${ESC}[?25h`;
+var hideCursor2 = `${ESC}[?25l`;
+var showCursor2 = `${ESC}[?25h`;
 var VALID_THEMES = [
   "normal",
   "winter",
@@ -917,9 +1012,12 @@ async function main() {
     case "auto":
       toggleAutoSeasonal();
       break;
+    case "config":
+    case "--config":
+    case "-c":
     case void 0:
     case "":
-      showCurrentTheme();
+      await runPicker();
       break;
     default:
       if (VALID_THEMES.includes(command)) {

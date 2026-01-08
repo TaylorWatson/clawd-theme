@@ -2,6 +2,7 @@
 import { getTheme, getSeasonalTheme, getAllThemes, } from './themes/index.js';
 import { loadClawdConfig, setTheme, setAutoSeasonal, } from './utils/config.js';
 import { renderClawdWithMessage, renderAllThemes, } from './utils/renderer.js';
+import { runPicker } from './picker.js';
 // ANSI escape codes for cursor manipulation
 const ESC = '\x1b';
 const moveUp = (n) => `${ESC}[${n}A`;
@@ -184,9 +185,13 @@ async function main() {
         case 'auto':
             toggleAutoSeasonal();
             break;
+        case 'config':
+        case '--config':
+        case '-c':
         case undefined:
         case '':
-            showCurrentTheme();
+            // Open interactive picker
+            await runPicker();
             break;
         default:
             if (VALID_THEMES.includes(command)) {

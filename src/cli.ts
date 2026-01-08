@@ -16,6 +16,7 @@ import {
   renderAllThemes,
   renderClawd,
 } from './utils/renderer.js';
+import { runPicker } from './picker.js';
 
 // ANSI escape codes for cursor manipulation
 const ESC = '\x1b';
@@ -246,9 +247,13 @@ async function main(): Promise<void> {
       toggleAutoSeasonal();
       break;
 
+    case 'config':
+    case '--config':
+    case '-c':
     case undefined:
     case '':
-      showCurrentTheme();
+      // Open interactive picker
+      await runPicker();
       break;
 
     default:

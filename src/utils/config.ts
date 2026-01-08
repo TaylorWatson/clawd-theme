@@ -55,6 +55,8 @@ export function saveClawdConfig(config: ClawdConfig): void {
 export function setTheme(themeName: ThemeName): void {
   const config = loadClawdConfig();
   config.theme = themeName;
+  // Disable autoSeasonal when setting a specific theme
+  config.autoSeasonal = false;
   saveClawdConfig(config);
 }
 
