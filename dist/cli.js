@@ -36,8 +36,7 @@ function showCurrentTheme() {
     console.log(renderAllThemes(themes, config.theme));
     console.log('\nCommands:');
     console.log('  /clawd <theme>  - Switch to a theme');
-    console.log('  /clawd auto     - Toggle auto-seasonal mode');
-    console.log('  /clawd config   - Open configuration TUI\n');
+    console.log('  /clawd auto     - Toggle auto-seasonal mode\n');
 }
 function switchTheme(themeName) {
     const normalized = themeName.toLowerCase();
@@ -63,11 +62,7 @@ function toggleAutoSeasonal() {
         console.log(renderClawdWithMessage(theme, 'Auto-seasonal mode disabled.'));
     }
 }
-async function openConfigTui() {
-    const { runTui } = await import('./tui/index.js');
-    await runTui();
-}
-async function main() {
+function main() {
     const args = process.argv.slice(2);
     const command = args[0]?.toLowerCase();
     switch (command) {
@@ -77,11 +72,6 @@ async function main() {
             break;
         case 'auto':
             toggleAutoSeasonal();
-            break;
-        case 'config':
-        case '--config':
-        case '-c':
-            await openConfigTui();
             break;
         case undefined:
         case '':
@@ -98,7 +88,4 @@ async function main() {
             }
     }
 }
-main().catch((error) => {
-    console.error('Error:', error);
-    process.exit(1);
-});
+main();

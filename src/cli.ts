@@ -57,8 +57,7 @@ function showCurrentTheme(): void {
 
   console.log('\nCommands:');
   console.log('  /clawd <theme>  - Switch to a theme');
-  console.log('  /clawd auto     - Toggle auto-seasonal mode');
-  console.log('  /clawd config   - Open configuration TUI\n');
+  console.log('  /clawd auto     - Toggle auto-seasonal mode\n');
 }
 
 function switchTheme(themeName: string): void {
@@ -96,12 +95,7 @@ function toggleAutoSeasonal(): void {
   }
 }
 
-async function openConfigTui(): Promise<void> {
-  const { runTui } = await import('./tui/index.js');
-  await runTui();
-}
-
-async function main(): Promise<void> {
+function main(): void {
   const args = process.argv.slice(2);
   const command = args[0]?.toLowerCase();
 
@@ -113,12 +107,6 @@ async function main(): Promise<void> {
 
     case 'auto':
       toggleAutoSeasonal();
-      break;
-
-    case 'config':
-    case '--config':
-    case '-c':
-      await openConfigTui();
       break;
 
     case undefined:
@@ -137,7 +125,4 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error) => {
-  console.error('Error:', error);
-  process.exit(1);
-});
+main();

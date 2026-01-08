@@ -21,4 +21,4 @@ Manage your Clawd mascot theme and appearance.
 - No argument - Show current theme and available options
 
 Run the theme command:
-!node ${CLAUDE_PLUGIN_ROOT}/dist/index.js $ARGUMENTS
+!node ${CLAUDE_PLUGIN_ROOT}/dist/bundle.js $ARGUMENTS
