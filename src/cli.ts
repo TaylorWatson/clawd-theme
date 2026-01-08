@@ -79,8 +79,8 @@ function renderClawdForOverwrite(theme: {
 
     lines = lines.map((line, i) => {
       if (i === 1) {
-        // Add extra space so middle line aligns with others for overwrite
-        return ` ${leftDec}${spacing}${line}${spacing}${rightDec}`;
+        // Middle snowflake offset left, but body stays aligned (extra space after dec)
+        return `${leftDec}${spacing}${spacing}${line}${spacing}${rightDec}`;
       }
       return `${spacing}${leftDec}${spacing}${line}${spacing}${rightDec}`;
     });
