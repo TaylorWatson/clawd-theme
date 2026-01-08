@@ -79,20 +79,20 @@ async function overwriteWelcomeClawd() {
     const { spawn } = await import('child_process');
     const tmpFile = `/tmp/clawd-theme-${process.pid}.txt`;
     fs.writeFileSync(tmpFile, output);
-    // Fully detach background process that writes to TTY multiple times
-    // Staggered writes ensure one happens after welcome screen renders
-    const child = spawn('/bin/sh', [
-        '-c',
-        `(
-      sleep 0.3; cat "${tmpFile}" > /dev/tty 2>/dev/null;
-      sleep 0.5; cat "${tmpFile}" > /dev/tty 2>/dev/null;
-      sleep 0.7; cat "${tmpFile}" > /dev/tty 2>/dev/null;
-      rm -f "${tmpFile}"
-    ) &`
-    ], {
+    // Create a shell script that runs in background
+    const scriptFile = `/tmp/clawd-theme-runner-${process.pid}.sh`;
+    const scriptContent = `#!/bin/sh
+sleep 0.3; cat "${tmpFile}" > /dev/tty 2>/dev/null
+sleep 0.5; cat "${tmpFile}" > /dev/tty 2>/dev/null
+sleep 0.7; cat "${tmpFile}" > /dev/tty 2>/dev/null
+rm -f "${tmpFile}" "${scriptFile}"
+`;
+    fs.writeFileSync(scriptFile, scriptContent, { mode: 0o755 });
+    // Use nohup to fully detach the background process
+    const child = spawn('nohup', ['/bin/sh', scriptFile], {
         detached: true,
         stdio: 'ignore',
-        shell: false
+        cwd: '/tmp'
     });
     child.unref();
 }

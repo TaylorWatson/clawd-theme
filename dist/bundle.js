@@ -821,18 +821,18 @@ async function overwriteWelcomeClawd() {
   const { spawn } = await import("child_process");
   const tmpFile = `/tmp/clawd-theme-${process.pid}.txt`;
   fs2.writeFileSync(tmpFile, output);
-  const child = spawn("/bin/sh", [
-    "-c",
-    `(
-      sleep 0.3; cat "${tmpFile}" > /dev/tty 2>/dev/null;
-      sleep 0.5; cat "${tmpFile}" > /dev/tty 2>/dev/null;
-      sleep 0.7; cat "${tmpFile}" > /dev/tty 2>/dev/null;
-      rm -f "${tmpFile}"
-    ) &`
-  ], {
+  const scriptFile = `/tmp/clawd-theme-runner-${process.pid}.sh`;
+  const scriptContent = `#!/bin/sh
+sleep 0.3; cat "${tmpFile}" > /dev/tty 2>/dev/null
+sleep 0.5; cat "${tmpFile}" > /dev/tty 2>/dev/null
+sleep 0.7; cat "${tmpFile}" > /dev/tty 2>/dev/null
+rm -f "${tmpFile}" "${scriptFile}"
+`;
+  fs2.writeFileSync(scriptFile, scriptContent, { mode: 493 });
+  const child = spawn("nohup", ["/bin/sh", scriptFile], {
     detached: true,
     stdio: "ignore",
-    shell: false
+    cwd: "/tmp"
   });
   child.unref();
 }
