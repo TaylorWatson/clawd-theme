@@ -88,8 +88,8 @@ async function overwriteWelcomeClawd(): Promise<void> {
   // Use base Clawd without decorations for exact positioning
   const clawdLines = renderBaseClawdWithColors(theme);
 
-  // Use ABSOLUTE positioning - row 5 is where Clawd is in welcome box
-  const clawdRow = 5;
+  // Use ABSOLUTE positioning - row 6 is where Clawd is in welcome box
+  const clawdRow = 6;
   const clawdCol = 24;
 
   let output = '';

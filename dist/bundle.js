@@ -807,7 +807,7 @@ async function overwriteWelcomeClawd() {
   const config = loadClawdConfig();
   const theme = config.autoSeasonal ? getSeasonalTheme() : getTheme(config.theme);
   const clawdLines = renderBaseClawdWithColors(theme);
-  const clawdRow = 5;
+  const clawdRow = 6;
   const clawdCol = 24;
   let output = "";
   output += saveCursor;
