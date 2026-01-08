@@ -1,0 +1,9 @@
+{
+  "name": "clawd-theme",
+  "displayName": "Clawd Theme Customizer",
+  "description": "Customize your Claude Code mascot with seasonal themes - Normal, Winter, Halloween, Valentine's, Spring, and Summer",
+  "version": "1.0.0",
+  "author": "Taylor Watson",
+  "repository": "https://github.com/twatson/clawd-theme",
+  "keywords": ["theme", "mascot", "customization", "seasonal", "clawd"]
+}

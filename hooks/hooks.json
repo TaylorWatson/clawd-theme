@@ -1,0 +1,17 @@
+{
+  "description": "Display themed Clawd mascot at session start",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/dist/index.js --welcome",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

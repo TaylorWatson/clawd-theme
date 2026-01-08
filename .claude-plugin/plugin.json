@@ -1,0 +1,8 @@
+{
+  "name": "clawd-theme",
+  "version": "1.0.0",
+  "description": "Customize Clawd mascot appearance with seasonal themes",
+  "author": "Taylor Watson <taylor.watson@soti.net>",
+  "commands": ["commands/clawd.md"],
+  "hooks": "hooks/hooks.json"
+}
