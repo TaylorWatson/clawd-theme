@@ -32,18 +32,30 @@ function showWelcome() {
         : undefined;
     console.log(renderClawdWithMessage(theme, message));
 }
-// Render just the base Clawd with colors (no decorations) for clean overwrite
-function renderBaseClawdWithColors(theme) {
+// Render Clawd with colors and optional decorations for overwrite
+function renderClawdForOverwrite(theme) {
     const baseArt = [
         ' ▐▛███▜▌',
         '▝▜█████▛▘',
         '  ▘▘ ▝▝',
     ];
-    const hex = theme.colors.primary;
-    const rgb = hexToRgb(hex);
-    if (!rgb)
-        return baseArt;
-    return baseArt.map(line => `\x1b[38;2;${rgb.r};${rgb.g};${rgb.b}m${line}\x1b[0m`);
+    const primaryRgb = hexToRgb(theme.colors.primary);
+    const decRgb = hexToRgb(theme.colors.decoration || theme.colors.primary);
+    const colorize = (text, rgb) => rgb ? `\x1b[38;2;${rgb.r};${rgb.g};${rgb.b}m${text}\x1b[0m` : text;
+    let lines = baseArt.map(line => colorize(line, primaryRgb));
+    // Add decorations if theme has them
+    if (theme.decoration) {
+        const { left, right, spacing } = theme.decoration;
+        const leftDec = colorize(left, decRgb);
+        const rightDec = colorize(right, decRgb);
+        lines = lines.map((line, i) => {
+            if (i === 1) {
+                return `${leftDec}${spacing}${line}${spacing}${rightDec}`;
+            }
+            return `${spacing}${leftDec}${spacing}${line}${spacing}${rightDec}`;
+        });
+    }
+    return lines;
 }
 function hexToRgb(hex) {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -61,11 +73,12 @@ async function overwriteWelcomeClawd() {
     const theme = config.autoSeasonal
         ? getSeasonalTheme()
         : getTheme(config.theme);
-    // Use base Clawd without decorations for exact positioning
-    const clawdLines = renderBaseClawdWithColors(theme);
+    // Render Clawd with decorations (snowflakes, etc.)
+    const clawdLines = renderClawdForOverwrite(theme);
     // Use ABSOLUTE positioning - row 6 is where Clawd is in welcome box
+    // Adjust column left by 3 chars if theme has decorations (spacing + decoration + spacing)
     const clawdRow = 6;
-    const clawdCol = 24;
+    const clawdCol = theme.decoration ? 21 : 24;
     let output = '';
     output += saveCursor;
     for (let i = 0; i < clawdLines.length; i++) {

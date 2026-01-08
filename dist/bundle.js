@@ -783,17 +783,28 @@ function showWelcome() {
   const message = config.autoSeasonal ? "(Auto-seasonal mode enabled)" : void 0;
   console.log(renderClawdWithMessage(theme, message));
 }
-function renderBaseClawdWithColors(theme) {
+function renderClawdForOverwrite(theme) {
   const baseArt = [
     " \u2590\u259B\u2588\u2588\u2588\u259C\u258C",
     "\u259D\u259C\u2588\u2588\u2588\u2588\u2588\u259B\u2598",
     "  \u2598\u2598 \u259D\u259D"
   ];
-  const hex = theme.colors.primary;
-  const rgb = hexToRgb2(hex);
-  if (!rgb)
-    return baseArt;
-  return baseArt.map((line) => `\x1B[38;2;${rgb.r};${rgb.g};${rgb.b}m${line}\x1B[0m`);
+  const primaryRgb = hexToRgb2(theme.colors.primary);
+  const decRgb = hexToRgb2(theme.colors.decoration || theme.colors.primary);
+  const colorize2 = (text, rgb) => rgb ? `\x1B[38;2;${rgb.r};${rgb.g};${rgb.b}m${text}\x1B[0m` : text;
+  let lines = baseArt.map((line) => colorize2(line, primaryRgb));
+  if (theme.decoration) {
+    const { left, right, spacing } = theme.decoration;
+    const leftDec = colorize2(left, decRgb);
+    const rightDec = colorize2(right, decRgb);
+    lines = lines.map((line, i) => {
+      if (i === 1) {
+        return `${leftDec}${spacing}${line}${spacing}${rightDec}`;
+      }
+      return `${spacing}${leftDec}${spacing}${line}${spacing}${rightDec}`;
+    });
+  }
+  return lines;
 }
 function hexToRgb2(hex) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -806,9 +817,9 @@ function hexToRgb2(hex) {
 async function overwriteWelcomeClawd() {
   const config = loadClawdConfig();
   const theme = config.autoSeasonal ? getSeasonalTheme() : getTheme(config.theme);
-  const clawdLines = renderBaseClawdWithColors(theme);
+  const clawdLines = renderClawdForOverwrite(theme);
   const clawdRow = 6;
-  const clawdCol = 24;
+  const clawdCol = theme.decoration ? 21 : 24;
   let output = "";
   output += saveCursor;
   for (let i = 0; i < clawdLines.length; i++) {
