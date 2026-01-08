@@ -762,6 +762,15 @@ function renderAllThemes(themes2, currentTheme) {
 }
 
 // dist/cli.js
+var ESC = "\x1B";
+var moveUp = (n) => `${ESC}[${n}A`;
+var moveDown = (n) => `${ESC}[${n}B`;
+var moveToColumn = (n) => `${ESC}[${n}G`;
+var saveCursor = `${ESC}[s`;
+var restoreCursor = `${ESC}[u`;
+var clearLine = `${ESC}[K`;
+var hideCursor = `${ESC}[?25l`;
+var showCursor = `${ESC}[?25h`;
 var VALID_THEMES = [
   "normal",
   "winter",
@@ -775,6 +784,25 @@ function showWelcome() {
   const theme = config.autoSeasonal ? getSeasonalTheme() : getTheme(config.theme);
   const message = config.autoSeasonal ? "(Auto-seasonal mode enabled)" : void 0;
   console.log(renderClawdWithMessage(theme, message));
+}
+function overwriteWelcomeClawd() {
+  const config = loadClawdConfig();
+  const theme = config.autoSeasonal ? getSeasonalTheme() : getTheme(config.theme);
+  const clawdLines = renderClawd(theme).split("\n");
+  const linesUpToFirstClawd = 6;
+  const clawdStartColumn = 24;
+  let output = "";
+  output += saveCursor;
+  output += moveUp(linesUpToFirstClawd);
+  for (let i = 0; i < clawdLines.length; i++) {
+    output += moveToColumn(clawdStartColumn);
+    output += clawdLines[i];
+    if (i < clawdLines.length - 1) {
+      output += moveDown(1);
+    }
+  }
+  output += restoreCursor;
+  process.stdout.write(output);
 }
 function showCurrentTheme() {
   const config = loadClawdConfig();
@@ -825,6 +853,10 @@ function main() {
     case "--welcome":
     case "-w":
       showWelcome();
+      break;
+    case "--overwrite":
+    case "-o":
+      overwriteWelcomeClawd();
       break;
     case "auto":
       toggleAutoSeasonal();

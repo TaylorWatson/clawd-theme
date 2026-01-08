@@ -1,7 +1,18 @@
 #!/usr/bin/env node
 import { getTheme, getSeasonalTheme, getAllThemes, } from './themes/index.js';
 import { loadClawdConfig, setTheme, setAutoSeasonal, } from './utils/config.js';
-import { renderClawdWithMessage, renderAllThemes, } from './utils/renderer.js';
+import { renderClawdWithMessage, renderAllThemes, renderClawd, } from './utils/renderer.js';
+// ANSI escape codes for cursor manipulation
+const ESC = '\x1b';
+const moveUp = (n) => `${ESC}[${n}A`;
+const moveDown = (n) => `${ESC}[${n}B`;
+const moveRight = (n) => `${ESC}[${n}C`;
+const moveToColumn = (n) => `${ESC}[${n}G`;
+const saveCursor = `${ESC}[s`;
+const restoreCursor = `${ESC}[u`;
+const clearLine = `${ESC}[K`;
+const hideCursor = `${ESC}[?25l`;
+const showCursor = `${ESC}[?25h`;
 const VALID_THEMES = [
     'normal',
     'winter',
@@ -19,6 +30,54 @@ function showWelcome() {
         ? '(Auto-seasonal mode enabled)'
         : undefined;
     console.log(renderClawdWithMessage(theme, message));
+}
+// Attempt to overwrite the Claude Code welcome screen Clawd
+function overwriteWelcomeClawd() {
+    const config = loadClawdConfig();
+    const theme = config.autoSeasonal
+        ? getSeasonalTheme()
+        : getTheme(config.theme);
+    // The welcome box Clawd is approximately:
+    // - 8-10 lines up from where hook output starts
+    // - Column 24 (roughly centered in left half of ~50 char wide left panel)
+    //
+    // Welcome box structure (approximate):
+    // Line -10: ╭─── Claude Code v2.1.1 ──────...
+    // Line -9:  │              ...               │
+    // Line -8:  │    Welcome back Taylor!        │
+    // Line -7:  │              ...               │
+    // Line -6:  │           ▐▛███▜▌              │  <- Clawd line 1
+    // Line -5:  │          ▝▜█████▛▘             │  <- Clawd line 2
+    // Line -4:  │            ▘▘ ▝▝               │  <- Clawd line 3
+    // Line -3:  │              ...               │
+    // Line -2:  │  Opus 4.5 · Claude Max...      │
+    // Line -1:  ╰────────────────────────────────╯
+    // Current:  (hook output starts here)
+    const clawdLines = renderClawd(theme).split('\n');
+    // Configuration for positioning - may need adjustment
+    const linesUpToFirstClawd = 6; // How many lines up to first Clawd line
+    const clawdStartColumn = 24; // Column where Clawd starts
+    // Write output that uses ANSI codes to overwrite
+    let output = '';
+    // Save cursor position
+    output += saveCursor;
+    // Move up to the first Clawd line
+    output += moveUp(linesUpToFirstClawd);
+    // For each line of our themed Clawd, move to position and write
+    for (let i = 0; i < clawdLines.length; i++) {
+        // Move to the correct column
+        output += moveToColumn(clawdStartColumn);
+        // Write the themed Clawd line (this will overwrite existing chars)
+        output += clawdLines[i];
+        // Move down to next line
+        if (i < clawdLines.length - 1) {
+            output += moveDown(1);
+        }
+    }
+    // Restore cursor position
+    output += restoreCursor;
+    // Output everything at once
+    process.stdout.write(output);
 }
 function showCurrentTheme() {
     const config = loadClawdConfig();
@@ -69,6 +128,11 @@ function main() {
         case '--welcome':
         case '-w':
             showWelcome();
+            break;
+        case '--overwrite':
+        case '-o':
+            // Attempt to overwrite the Claude Code welcome Clawd
+            overwriteWelcomeClawd();
             break;
         case 'auto':
             toggleAutoSeasonal();
