@@ -1,17 +1,19 @@
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "clawd-theme-marketplace",
-  "version": "1.0.0",
-  "description": "Clawd Theme Customizer - Seasonal mascot themes for Claude Code",
+  "name": "clawd-theme",
   "owner": {
     "name": "Taylor Watson",
     "email": "taylor.watson@soti.net"
+  },
+  "metadata": {
+    "description": "Customize your Claude Code mascot with seasonal themes",
+    "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "clawd-theme",
       "description": "Customize your Claude Code mascot with seasonal themes - Normal, Winter, Halloween, Valentine's, Spring, and Summer",
-      "source": "."
+      "source": "./",
+      "strict": false
     }
   ]
 }
