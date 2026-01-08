@@ -821,12 +821,25 @@ async function overwriteWelcomeClawd() {
   const { spawn } = await import("child_process");
   const tmpFile = `/tmp/clawd-theme-${process.pid}.txt`;
   fs2.writeFileSync(tmpFile, output);
+  const { execSync } = await import("child_process");
+  let ttyPath = "/dev/tty";
+  try {
+    const ppid = process.ppid;
+    const ttyResult = execSync(`ps -p ${ppid} -o tty=`, { encoding: "utf-8" }).trim();
+    if (ttyResult && ttyResult !== "??" && ttyResult !== "-") {
+      ttyPath = ttyResult.startsWith("/dev/") ? ttyResult : `/dev/${ttyResult}`;
+    }
+  } catch {
+  }
+  const logFile = `/tmp/clawd-theme-debug.log`;
   const scriptFile = `/tmp/clawd-theme-runner-${process.pid}.sh`;
   const scriptContent = `#!/bin/sh
-sleep 0.3; cat "${tmpFile}" > /dev/tty 2>/dev/null
-sleep 0.5; cat "${tmpFile}" > /dev/tty 2>/dev/null
-sleep 0.7; cat "${tmpFile}" > /dev/tty 2>/dev/null
+echo "Script started, TTY=${ttyPath}" >> "${logFile}"
+sleep 0.3; cat "${tmpFile}" > "${ttyPath}" 2>>"${logFile}"; echo "Write 1 done" >> "${logFile}"
+sleep 0.5; cat "${tmpFile}" > "${ttyPath}" 2>>"${logFile}"; echo "Write 2 done" >> "${logFile}"
+sleep 0.7; cat "${tmpFile}" > "${ttyPath}" 2>>"${logFile}"; echo "Write 3 done" >> "${logFile}"
 rm -f "${tmpFile}" "${scriptFile}"
+echo "Script finished" >> "${logFile}"
 `;
   fs2.writeFileSync(scriptFile, scriptContent, { mode: 493 });
   const child = spawn("nohup", ["/bin/sh", scriptFile], {
