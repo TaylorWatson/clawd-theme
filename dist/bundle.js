@@ -799,7 +799,7 @@ function renderClawdForOverwrite(theme) {
     const rightDec = colorize2(right, decRgb);
     lines = lines.map((line, i) => {
       if (i === 1) {
-        return `${leftDec}${spacing}${line}${spacing}${rightDec}`;
+        return ` ${leftDec}${spacing}${line}${spacing}${rightDec}`;
       }
       return `${spacing}${leftDec}${spacing}${line}${spacing}${rightDec}`;
     });

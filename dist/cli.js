@@ -50,7 +50,8 @@ function renderClawdForOverwrite(theme) {
         const rightDec = colorize(right, decRgb);
         lines = lines.map((line, i) => {
             if (i === 1) {
-                return `${leftDec}${spacing}${line}${spacing}${rightDec}`;
+                // Add extra space so middle line aligns with others for overwrite
+                return ` ${leftDec}${spacing}${line}${spacing}${rightDec}`;
             }
             return `${spacing}${leftDec}${spacing}${line}${spacing}${rightDec}`;
         });
