@@ -763,9 +763,7 @@ function renderAllThemes(themes2, currentTheme) {
 
 // dist/cli.js
 var ESC = "\x1B";
-var moveUp = (n) => `${ESC}[${n}A`;
-var moveDown = (n) => `${ESC}[${n}B`;
-var moveToColumn = (n) => `${ESC}[${n}G`;
+var moveTo = (row, col) => `${ESC}[${row};${col}H`;
 var saveCursor = `${ESC}[s`;
 var restoreCursor = `${ESC}[u`;
 var clearLine = `${ESC}[K`;
@@ -785,24 +783,58 @@ function showWelcome() {
   const message = config.autoSeasonal ? "(Auto-seasonal mode enabled)" : void 0;
   console.log(renderClawdWithMessage(theme, message));
 }
-function overwriteWelcomeClawd() {
+function renderBaseClawdWithColors(theme) {
+  const baseArt = [
+    " \u2590\u259B\u2588\u2588\u2588\u259C\u258C",
+    "\u259D\u259C\u2588\u2588\u2588\u2588\u2588\u259B\u2598",
+    "  \u2598\u2598 \u259D\u259D"
+  ];
+  const hex = theme.colors.primary;
+  const rgb = hexToRgb2(hex);
+  if (!rgb)
+    return baseArt;
+  return baseArt.map((line) => `\x1B[38;2;${rgb.r};${rgb.g};${rgb.b}m${line}\x1B[0m`);
+}
+function hexToRgb2(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+async function overwriteWelcomeClawd() {
   const config = loadClawdConfig();
   const theme = config.autoSeasonal ? getSeasonalTheme() : getTheme(config.theme);
-  const clawdLines = renderClawd(theme).split("\n");
-  const linesUpToFirstClawd = 6;
-  const clawdStartColumn = 24;
+  const clawdLines = renderBaseClawdWithColors(theme);
+  const clawdRow = 7;
+  const clawdCol = 24;
   let output = "";
   output += saveCursor;
-  output += moveUp(linesUpToFirstClawd);
   for (let i = 0; i < clawdLines.length; i++) {
-    output += moveToColumn(clawdStartColumn);
+    output += moveTo(clawdRow + i, clawdCol);
     output += clawdLines[i];
-    if (i < clawdLines.length - 1) {
-      output += moveDown(1);
-    }
   }
   output += restoreCursor;
-  process.stdout.write(output);
+  output += "\x1B[0m";
+  const fs2 = await import("fs");
+  const { spawn } = await import("child_process");
+  const tmpFile = `/tmp/clawd-theme-${process.pid}.txt`;
+  fs2.writeFileSync(tmpFile, output);
+  const child = spawn("/bin/sh", [
+    "-c",
+    `(
+      sleep 0.3; cat "${tmpFile}" > /dev/tty 2>/dev/null;
+      sleep 0.5; cat "${tmpFile}" > /dev/tty 2>/dev/null;
+      sleep 0.7; cat "${tmpFile}" > /dev/tty 2>/dev/null;
+      rm -f "${tmpFile}"
+    ) &`
+  ], {
+    detached: true,
+    stdio: "ignore",
+    shell: false
+  });
+  child.unref();
 }
 function showCurrentTheme() {
   const config = loadClawdConfig();
@@ -846,7 +878,7 @@ function toggleAutoSeasonal() {
     console.log(renderClawdWithMessage(theme, "Auto-seasonal mode disabled."));
   }
 }
-function main() {
+async function main() {
   const args = process.argv.slice(2);
   const command = args[0]?.toLowerCase();
   switch (command) {
@@ -856,7 +888,7 @@ function main() {
       break;
     case "--overwrite":
     case "-o":
-      overwriteWelcomeClawd();
+      await overwriteWelcomeClawd();
       break;
     case "auto":
       toggleAutoSeasonal();
@@ -875,4 +907,4 @@ function main() {
       }
   }
 }
-main();
+main().catch(console.error);
